@@ -25,7 +25,7 @@ app.use(
   cors({
     origin: process.env.FRONTEND_URL,
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
@@ -33,19 +33,43 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-
 // Routes
-const prefix = "/chain";
+const prefix = "/HotelSleepGun";
+//app.use(prefix + "/partners", require("./routes/user/partnerRoutes"));
 
-app.use(prefix + "/partners", require("./routes/user/partnerRoutes"));
-app.use(prefix + "/members", require("./routes/user/memberRoutes"));
-app.use(prefix + "/login", require("./routes/login"));
+app.use(prefix + "/registerLogin", require("./routes/registerLogin.Routes"));
+app.use(prefix + "/registerLoginEmail", require("./routes/otp.Routes"));
 
-app.use(prefix + "/dataset", require("./routes/dataset/dataset"));
+app.use(prefix + "/typeHotel", require("./routes/typeHotel/typeHotelRoutes"));
+app.use(
+  prefix + "/typeFacilityHotel",
+  require("./routes/typeHotel/typeFacilityHotelRoutes")
+);
+app.use(
+  prefix + "/typeRoomHotel",
+  require("./routes/typeHotel/typeRoomHotelRoutes")
+);
+app.use(
+  prefix + "/typeFoodHotel",
+  require("./routes/typeHotel/typeFoodHotelRoutes")
+);
+app.use(
+  prefix + "/typeHotelFor",
+  require("./routes/typeHotel/typeHotelForRoutes")
+);
+app.use(
+  prefix + "/typeHotelLocation",
+  require("./routes/typeHotel/typeHotelLocationRoutes")
+);
+app.use(
+  prefix + "/typeRoom",
+  require("./routes/typeHotel/typeRoomRoutes")
+);
 
-app.use(prefix + "/chat", require("./routes/chat"));
-
-app.use(prefix + "/product", require("./routes/product/productPartnerRoutes"));
+app.use(
+  prefix + "/room",
+  require("./routes/roomRoutes")
+);
 
 app.get(prefix + "/test", (req, res) => res.send("✅ Test OK with prefix"));
 
@@ -62,17 +86,18 @@ io.on("connection", (socket) => {
 
   socket.on("send_message", async (data) => {
     const { senderId, receiverId, text, timestamp } = data;
-  
+
     const roomName = [senderId, receiverId].sort().join("_");
-  
+
     console.log(
       `📨 Message from ${senderId} to ${receiverId} (room: ${roomName}): ${text}`
     );
-  
+
     try {
-      const savedMessage = await require("./controllers/chatController").saveMessage(data);
+      const savedMessage =
+        await require("./controllers/chatController").saveMessage(data);
       console.log("💾 ข้อความถูกบันทึกแล้ว:", savedMessage._id);
-  
+
       io.to(roomName).emit("receive_message", savedMessage);
     } catch (error) {
       console.error("❌ เกิดข้อผิดพลาดในการบันทึกข้อความ:", error);
