@@ -3,10 +3,6 @@ const { Schema } = mongoose;
 
 const typeRoomSchema = new Schema(
   {
-    mainName: {
-      type: String,
-      trim: true,
-    },
     name: {
       type: String,
       trim: true,

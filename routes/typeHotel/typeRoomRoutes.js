@@ -4,6 +4,7 @@ const router = express.Router();
 const multer = require("multer");
 const path = require("path");
 
+
 // ==== Multer Config ====
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -16,16 +17,11 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-router.post("/create", controller.createTypeRoom);
-
-router.get("/getAll", controller.getAllTypeRoomsGrouped);
-
-router.get("/get/:id", controller.getTypeRoomById);
-
-router.put("/update/:id", controller.updateTypeRoom);
-
-router.delete("/delete/:id", controller.deleteTypeRoom);
-
-router.delete("/deleteAll", controller.deleteAllTypeRooms);
-
+// ==== Routes ====
+router.post("/create", upload.single("icon"), controller.createTypeRoom);
+router.get("/getAll", controller.getAllTypeRoom);
+router.delete("/delete/:id", controller.deleteTypeRoomById);
+router.delete("/deleteAll", controller.deleteAllTypeRoom);
+router.put("/update/:id", upload.single("icon"), controller.updateTypeRoomById);
 module.exports = router;
+

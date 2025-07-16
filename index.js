@@ -65,11 +65,15 @@ app.use(
   prefix + "/typeRoom",
   require("./routes/typeHotel/typeRoomRoutes")
 );
-
+app.use(
+  prefix + "/typePaymentPolicy",
+  require("./routes/typeHotel/typePaymentPolicyRoutes")
+);
 app.use(
   prefix + "/room",
   require("./routes/roomRoutes")
 );
+app.use(prefix + "/promotion", require("./routes/promotionRoutes"));
 
 app.get(prefix + "/test", (req, res) => res.send("✅ Test OK with prefix"));
 
