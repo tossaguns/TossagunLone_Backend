@@ -275,6 +275,13 @@ exports.updatePartnerProfileAfterLogin = async (req, res) => {
       bankNumber: req.body.bankNumber,
       companyTaxId: req.body.companyTaxId,
       isProfileComplete: req.body.isProfileComplete === "true",
+      companyAddress: req.body.companyAddress,
+      companySubdistrict: req.body.companySubdistrict,
+      companyDistrict: req.body.companyDistrict,
+      companyProvince: req.body.companyProvince,
+      companyPostcode: req.body.companyPostcode,
+      hotelLatitude: req.body.hotelLatitude,
+      hotelLongitude: req.body.hotelLongitude,
     };
 
     // เพิ่มชื่อไฟล์รูปถ้ามีการอัปโหลด

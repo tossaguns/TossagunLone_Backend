@@ -28,15 +28,21 @@ const upload = multer({
 exports.createRoom = (req, res) => {
   upload(req, res, async (err) => {
     if (err) {
+      console.log('Multer error:', err);
       return res.status(400).json({ message: err.message });
     }
 
     try {
+      console.log('===== CREATE ROOM DEBUG =====');
+      console.log('req.user:', req.user);
+      console.log('req.body:', req.body);
+      console.log('req.files:', req.files);
       // รูปภาพเก็บชื่อไฟล์
       const imgrooms = req.files ? req.files.map((file) => file.filename) : [];
 
       // ตรวจสอบ typeRoom ว่ามีหรือไม่
       if (!req.body.typeRoom) {
+        console.log('Missing typeRoom');
         return res.status(400).json({ message: "typeRoom is required" });
       }
 
@@ -53,12 +59,16 @@ exports.createRoom = (req, res) => {
             ? req.body.typeRoomHotel
             : [req.body.typeRoomHotel]
           : [],
+        partnerId: req.user.id, // เพิ่ม partnerId
       };
+      console.log('roomData to save:', roomData);
 
       const newRoom = new Room(roomData);
       const savedRoom = await newRoom.save();
+      console.log('Room saved:', savedRoom);
       res.status(201).json(savedRoom);
     } catch (error) {
+      console.error('createRoom error:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -67,7 +77,7 @@ exports.createRoom = (req, res) => {
 // ดึงข้อมูลทั้งหมด
 exports.getAllRooms = async (req, res) => {
   try {
-    const rooms = await Room.find()
+    const rooms = await Room.find({ partnerId: req.user.id })
       .populate("typeRoom")
       .populate("typeRoomHotel");
     res.json(rooms);

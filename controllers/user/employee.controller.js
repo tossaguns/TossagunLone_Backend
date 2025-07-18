@@ -26,10 +26,14 @@ exports.createEmployee = async (req, res) => {
       return res.status(400).json({ message: "มีผู้ใช้นี้อยู่แล้ว" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    let passwordToSave = password;
+    if (statusByPartner === 'adminPartner') {
+      passwordToSave = await bcrypt.hash(password, 10);
+    }
+    // ถ้าไม่ใช่ adminPartner (เช่น partner เพิ่มพนักงาน) จะเก็บ plain text
     const employee = new Employee({
       username,
-      password: hashedPassword,
+      password: passwordToSave,
       firstname,
       lastname,
       nickname,
@@ -39,7 +43,8 @@ exports.createEmployee = async (req, res) => {
       employeeCode,
       positionEmployee,
       statusByPartner,
-      imageIden: req.file?.path || "", 
+      imageIden: req.file?.path || "",
+      partnerId: req.user.id, // เพิ่ม partnerId
     });
 
     await employee.save();
@@ -81,7 +86,7 @@ exports.loginEmployee = async (req, res) => {
 // ดึงพนักงานทั้งหมด
 exports.getAllEmployees = async (req, res) => {
   try {
-    const employees = await Employee.find().sort({ createdAt: -1 });
+    const employees = await Employee.find({ partnerId: req.user.id }).sort({ createdAt: -1 });
     res.status(200).json(employees);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -113,9 +118,13 @@ exports.updateEmployee = async (req, res) => {
 
     // log password ที่รับมา
     console.log('password from req.body:', req.body.password);
-    // ตรวจสอบ password ที่ส่งมา ถ้าเป็น plain text ให้ hash
-    if (req.body.password && !req.body.password.startsWith('$2a$')) {
-      employee.password = await bcrypt.hash(req.body.password, 10);
+    // ตรวจสอบ password ที่ส่งมา
+    if (req.body.password) {
+      if (employee.statusByPartner === 'adminPartner' && !req.body.password.startsWith('$2a$')) {
+        employee.password = await bcrypt.hash(req.body.password, 10);
+      } else {
+        employee.password = req.body.password; // เก็บ plain text สำหรับ partner
+      }
     }
 
     if (req.file?.path) {

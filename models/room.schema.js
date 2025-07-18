@@ -24,6 +24,7 @@ const roomSchema = new Schema(
       default: [],
       validate: [arrayLimit, "{PATH} exceeds the limit of 10"],
     },
+    partnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner', required: true },
     typeRoomHotel: [
       {
         type: mongoose.Schema.Types.ObjectId,

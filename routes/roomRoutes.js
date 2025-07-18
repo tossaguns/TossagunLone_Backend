@@ -1,29 +1,30 @@
 const express = require("express");
 const router = express.Router();
 const roomController = require("../controllers/room.controller");
+const { verifyToken } = require('../middlewares/auth.middleware');
 
 // create room + upload images (field name: imgrooms)
-router.post("/create", roomController.createRoom);
+router.post("/create", verifyToken, roomController.createRoom);
 
 // get all rooms
-router.get("/getAll", roomController.getAllRooms);
+router.get("/getAll", verifyToken, roomController.getAllRooms);
 
 // get room by id
-router.get("/get:id", roomController.getRoomById);
+router.get("/get:id", verifyToken, roomController.getRoomById);
 
 // update room by id + upload images (optional)
-router.put("/update:id", roomController.updateRoom);
+router.put("/update:id", verifyToken, roomController.updateRoom);
 
-router.patch("/update/:id/status", roomController.updateRoomStatus);
+router.patch("/update/:id/status", verifyToken, roomController.updateRoomStatus);
 // delete all rooms
-router.delete("/DeleteAll", roomController.deleteAllRooms);
+router.delete("/DeleteAll", verifyToken, roomController.deleteAllRooms);
 
 // delete room by id
-router.delete("/Delete:id", roomController.deleteRoomById);
+router.delete("/Delete:id", verifyToken, roomController.deleteRoomById);
 
-router.get("/status-options", roomController.getStatusOptions);
+router.get("/status-options", verifyToken, roomController.getStatusOptions);
 
-router.patch("/update:id/status", roomController.updateRoomStatus);
+router.patch("/update:id/status", verifyToken, roomController.updateRoomStatus);
 
 
 module.exports = router;

@@ -22,6 +22,7 @@ exports.createPromotion = async (req, res) => {
     const promotion = new Promotion({
       ...req.body,
       finalPrice: finalPrice,
+      partnerId: req.user.id, // เพิ่ม partnerId
     });
     await promotion.save();
     res.status(201).json(promotion);
@@ -33,7 +34,12 @@ exports.createPromotion = async (req, res) => {
 // ดึงโปรโมชั่นทั้งหมด
 exports.getAllPromotions = async (req, res) => {
   try {
-    const promotions = await Promotion.find();
+    const promotions = await Promotion.find({
+      $or: [
+        { partnerId: null }, // global promotion
+        { partnerId: req.user.id } // ของ partner นี้
+      ]
+    });
     // เพิ่มฟิลด์ราคาหลังลดในแต่ละ promotion
     const result = promotions.map((promo) => {
       const obj = promo.toObject();

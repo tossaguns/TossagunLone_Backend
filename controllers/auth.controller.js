@@ -5,13 +5,16 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 exports.login = async (req, res) => {
+  console.log("BODY:", req.body); // log body ที่รับมา
+  console.log("JWT_SECRET:", process.env.JWT_SECRET ? 'SET' : 'NOT SET'); // log ว่ามี JWT_SECRET หรือไม่
   const { username, password } = req.body;
 
   try {
-    // ลองค้นหาจาก Employee ก่อน
     const employee = await Employee.findOne({ username });
+    console.log("employee:", employee);
     if (employee) {
       const isMatch = await bcrypt.compare(password, employee.password);
+      console.log("isMatch (employee):", isMatch);
       if (!isMatch) return res.status(401).json({ message: "รหัสผ่านไม่ถูกต้อง" });
 
       const token = jwt.sign(
@@ -28,10 +31,14 @@ exports.login = async (req, res) => {
       });
     }
 
-    // ลองค้นหาจาก Partner ถ้าไม่เจอใน Employee
-    const partner = await Partner.findOne({ username });
+    const partner = await Partner.findOne({ username }).select('+password');
+    console.log("partner:", partner);
     if (partner) {
+      if (!partner.password) {
+        return res.status(500).json({ message: "ข้อมูล partner ไม่มีรหัสผ่าน กรุณาติดต่อผู้ดูแลระบบ" });
+      }
       const isMatch = await bcrypt.compare(password, partner.password);
+      console.log("isMatch (partner):", isMatch);
       if (!isMatch) return res.status(401).json({ message: "รหัสผ่านไม่ถูกต้อง" });
 
       const token = jwt.sign(
@@ -48,8 +55,10 @@ exports.login = async (req, res) => {
       });
     }
 
+    console.log("ไม่พบผู้ใช้งาน");
     return res.status(404).json({ message: "ไม่พบผู้ใช้งาน" });
   } catch (err) {
+    console.error("LOGIN ERROR:", err);
     return res.status(500).json({ message: "เกิดข้อผิดพลาดในระบบ", error: err.message });
   }
 };

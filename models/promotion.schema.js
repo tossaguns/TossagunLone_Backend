@@ -52,6 +52,7 @@ const promotionSchema = new Schema(
       type: Number,
       default: null,
     },
+    partnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner', required: true },
   },
   {
     timestamps: true,

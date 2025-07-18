@@ -25,6 +25,7 @@ const employeeSchema = new Schema(
     imageIden: { type: String, default: "" },
 
     statusByPartner: { type: String, required: true }, // มี adminPartner, employee
+    partnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner', required: true },
   },
   {
     timestamps: true,

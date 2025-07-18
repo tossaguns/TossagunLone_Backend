@@ -37,8 +37,19 @@ app.use(cookieParser());
 const prefix = "/HotelSleepGun";
 //app.use(prefix + "/partners", require("./routes/user/partnerRoutes"));
 app.use(prefix + "/employee", require("./routes/user/employeeRoutes"));
-app.use(prefix + "/partner", require("./routes/user/partnerRoutes"));
+app.use(
+  prefix + "/employeeLogin",
+  require("./routes/login/employeeLoginRoutes")
+);
 
+app.use(
+  prefix + "/adminApprovePartner",
+  require("./routes/approvePartnerRoutes")
+);
+
+app.use(prefix + "/aboutHotel", require("./routes/aboutHotel/aboutHotelRoutes"));
+app.use(prefix + "/partner", require("./routes/user/partnerRoutes"));
+app.use(prefix + "/partnerLogin", require("./routes/login/partnerLoginRoutes"));
 
 app.use(prefix + "/registerLogin", require("./routes/registerLogin.Routes"));
 app.use(prefix + "/auth", require("./routes/authRoutes"));

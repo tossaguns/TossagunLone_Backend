@@ -22,11 +22,13 @@ const aboutHotelSchema = new Schema(
     checkOutForm: { type: String },
     checkOutTo: { type: String },
     VerifyIden_checkIn: { type: String },
+
     AboutFacilityHotel: { type: String },
     AboutHotelLocation: { type: String },
     AboutRoomHotel: { type: String },
     AboutHotelFor: { type: String },
     AboutFoodHotel: { type: String },
+    
     typeBedPrice: {
       type: typeBedPriceSchema,
       default: () => ({ child: 0, normal: 0 })
