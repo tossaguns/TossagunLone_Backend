@@ -16,6 +16,7 @@ router.get("/get:id", verifyToken, roomController.getRoomById);
 router.put("/update:id", verifyToken, roomController.updateRoom);
 
 router.patch("/update/:id/status", verifyToken, roomController.updateRoomStatus);
+router.patch('/update/:id/status-room', roomController.updateRoomStatusRoom);
 // delete all rooms
 router.delete("/DeleteAll", verifyToken, roomController.deleteAllRooms);
 

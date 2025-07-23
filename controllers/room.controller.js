@@ -33,16 +33,11 @@ exports.createRoom = (req, res) => {
     }
 
     try {
-      console.log('===== CREATE ROOM DEBUG =====');
-      console.log('req.user:', req.user);
-      console.log('req.body:', req.body);
-      console.log('req.files:', req.files);
       // รูปภาพเก็บชื่อไฟล์
       const imgrooms = req.files ? req.files.map((file) => file.filename) : [];
 
       // ตรวจสอบ typeRoom ว่ามีหรือไม่
       if (!req.body.typeRoom) {
-        console.log('Missing typeRoom');
         return res.status(400).json({ message: "typeRoom is required" });
       }
 
@@ -52,7 +47,7 @@ exports.createRoom = (req, res) => {
         price: req.body.price,
         stayPeople: req.body.stayPeople,
         roomDetail: req.body.roomDetail,
-        imgrooms: imgrooms,
+        imgrooms: imgrooms, // array ของชื่อไฟล์
         typeRoom: req.body.typeRoom, // ObjectId
         typeRoomHotel: req.body.typeRoomHotel
           ? Array.isArray(req.body.typeRoomHotel)
@@ -61,14 +56,11 @@ exports.createRoom = (req, res) => {
           : [],
         partnerId: req.user.id, // เพิ่ม partnerId
       };
-      console.log('roomData to save:', roomData);
 
       const newRoom = new Room(roomData);
       const savedRoom = await newRoom.save();
-      console.log('Room saved:', savedRoom);
       res.status(201).json(savedRoom);
     } catch (error) {
-      console.error('createRoom error:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -158,6 +150,26 @@ exports.updateRoomStatus = async (req, res) => {
     // บันทึก
     const updatedRoom = await room.save();
 
+    res.json(updatedRoom);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.updateRoomStatusRoom = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { statusRoom } = req.body;
+    const allowedStatusRoom = ["เปิดใช้งาน", "ปิดทำการ"];
+    if (!allowedStatusRoom.includes(statusRoom)) {
+      return res.status(400).json({ message: "Invalid statusRoom value" });
+    }
+    const room = await Room.findById(id);
+    if (!room) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+    room.statuRoom = statusRoom;
+    const updatedRoom = await room.save();
     res.json(updatedRoom);
   } catch (error) {
     res.status(500).json({ message: error.message });

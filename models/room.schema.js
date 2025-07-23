@@ -3,6 +3,8 @@ const { Schema } = mongoose;
 
 const roomSchema = new Schema(
   {
+
+    //มาเพิ่มราคาที่ลดเเล้ว เเละสถานะปุ่ม radio
     roomNumber: {
       type: String,
       trim: true,
@@ -39,6 +41,11 @@ const roomSchema = new Schema(
       type: String,
       enum: ["SleepGunWeb", "Walkin"],
       default: "Walkin",
+    },
+    statuRoom: {
+      type: String,
+      enum: ["เปิดใช้งาน", "ปิดทำการ"],
+      default: "เปิดใช้งาน",
     },
   },
   {

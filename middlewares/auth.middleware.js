@@ -7,7 +7,9 @@ exports.verifyToken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // { id, role }
+    // รองรับทั้ง id และ partnerId
+    req.user = decoded;
+    req.user.id = decoded.id || decoded.partnerId; // ให้ req.user.id มีค่าเสมอ
     next();
   } catch (err) {
     res.status(401).json({ message: "token ไม่ถูกต้อง" });

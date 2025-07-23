@@ -3,6 +3,9 @@ const AboutHotel = require("../../models/aboutHotel/aboutHotel.schema")
 // CREATE
 exports.createAboutHotel = async (req, res) => {
   try {
+    // Filter out any cashPledge related fields from request body
+    // const { cashPledge, ...aboutHotelData } = req.body
+    
     const newAboutHotel = new AboutHotel(req.body)
     const saved = await newAboutHotel.save()
     res.status(201).json(saved)
@@ -23,6 +26,25 @@ exports.getAllAboutHotel = async (req, res) => {
       .populate("typePaymentPolicy")
       .populate("typeRoomHotel")
 
+    res.status(200).json(data)
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+// GET BY PARTNER ID
+exports.getAboutHotelByPartnerId = async (req, res) => {
+  try {
+    const data = await AboutHotel.findOne({ partnerId: req.params.partnerId })
+      .populate("typeFacilityHotel")
+      .populate("typeFoodHotel")
+      .populate("typeHotel")
+      .populate("typeHotelFor")
+      .populate("typeHotelLocation")
+      .populate("typePaymentPolicy")
+      .populate("typeRoomHotel")
+
+    if (!data) return res.status(404).json({ message: "Not found" })
     res.status(200).json(data)
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -51,6 +73,9 @@ exports.getAboutHotelById = async (req, res) => {
 // UPDATE BY ID
 exports.updateAboutHotel = async (req, res) => {
   try {
+    // Filter out any cashPledge related fields from request body
+    // const { cashPledge, ...updateData } = req.body
+    
     const updated = await AboutHotel.findByIdAndUpdate(
       req.params.id,
       req.body,

@@ -7,3 +7,7 @@ const {
 router.post("/login", loginPartner);
 
 module.exports = router;
+
+
+
+

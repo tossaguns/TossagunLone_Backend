@@ -5,6 +5,7 @@ const cors = require('cors');
 
 router.post("/creat", aboutHotel.createAboutHotel);
 router.get("/getAll", aboutHotel.getAllAboutHotel);
+router.get("/getByPartnerId/:partnerId", aboutHotel.getAboutHotelByPartnerId);
 router.get("/get/:id", aboutHotel.getAboutHotelById);
 router.put("/update/:id", aboutHotel.updateAboutHotel);
 router.delete("/delete/:id", aboutHotel.deleteAboutHotelById);
