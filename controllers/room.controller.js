@@ -168,7 +168,27 @@ exports.updateRoomStatusRoom = async (req, res) => {
     if (!room) {
       return res.status(404).json({ message: "Room not found" });
     }
-    room.statuRoom = statusRoom;
+    room.statusRoom = statusRoom;
+    const updatedRoom = await room.save();
+    res.json(updatedRoom);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.updateRoomStatusPromotion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { statusPromotion } = req.body;
+    const allowedStatusPromotion = ["openPromotion", "closePromotion"];
+    if (!allowedStatusPromotion.includes(statusPromotion)) {
+      return res.status(400).json({ message: "Invalid statusPromotion value" });
+    }
+    const room = await Room.findById(id);
+    if (!room) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+    room.statusPromotion = statusPromotion;
     const updatedRoom = await room.save();
     res.json(updatedRoom);
   } catch (error) {

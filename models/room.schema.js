@@ -42,11 +42,17 @@ const roomSchema = new Schema(
       enum: ["SleepGunWeb", "Walkin"],
       default: "Walkin",
     },
-    statuRoom: {
+    statusRoom: {
       type: String,
       enum: ["เปิดใช้งาน", "ปิดทำการ"],
       default: "เปิดใช้งาน",
     },
+    statusPromotion: {
+      type: String,
+      enum: ["openPromotion", "closePromotion"],
+      default: "closePromotion",
+    },
+   
   },
   {
     timestamps: true,
