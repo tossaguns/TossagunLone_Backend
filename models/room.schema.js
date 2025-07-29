@@ -52,6 +52,15 @@ const roomSchema = new Schema(
       enum: ["openPromotion", "closePromotion"],
       default: "closePromotion",
     },
+    air: {
+      type: String,
+      enum: ["ห้องเเอร์", "ห้องพัดลม", "ห้องเเอร์และพัดลม"],
+      default: "ห้องพัดลม",
+    },
+    quota: {
+      type: Number,
+      default: 5, // โควต้าเริ่มต้น 5 ห้องต่อ partner
+    },
    
   },
   {

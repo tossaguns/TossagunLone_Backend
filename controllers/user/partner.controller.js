@@ -381,3 +381,95 @@ exports.updatePartnerProfileAfterLogin = async (req, res) => {
   
 };*/
 
+// ดึงข้อมูล hotel login สำหรับหน้า LoginCompany
+exports.getHotelLoginData = async (req, res) => {
+  try {
+    const partnerId = req.params.partnerId;
+    
+    if (!mongoose.Types.ObjectId.isValid(partnerId)) {
+      return res.status(400).json({ message: "ID ไม่ถูกต้อง" });
+    }
+
+    const partner = await Partner.findById(partnerId).select('companyName imageHotelOurDoor hotelName status');
+    
+    if (!partner) {
+      return res.status(404).json({ message: "ไม่พบข้อมูลโรงแรม" });
+    }
+
+    // ตรวจสอบว่า partner นี้ได้รับการอนุมัติแล้วหรือไม่
+    if (partner.status !== "approved") {
+      return res.status(403).json({ message: "บัญชีของคุณยังไม่ผ่านการอนุมัติ" });
+    }
+
+    // ส่งข้อมูลที่จำเป็นสำหรับหน้า login
+    const hotelData = {
+      companyName: partner.companyName || '',
+      hotelName: partner.hotelName || '',
+      imageHotelOurDoor: partner.imageHotelOurDoor || '/imgHotel/hotel/loginCompany.jpg' // default image
+    };
+
+    res.status(200).json(hotelData);
+  } catch (error) {
+    console.error("Error in getHotelLoginData:", error);
+    res.status(500).json({ message: "เกิดข้อผิดพลาดจากเซิร์ฟเวอร์" });
+  }
+};
+
+// สร้างข้อมูลทดสอบสำหรับ hotel login
+exports.createTestHotelData = async (req, res) => {
+  try {
+    // ตรวจสอบว่ามี partner อยู่แล้วหรือไม่
+    const existingPartner = await Partner.findOne();
+    
+    if (existingPartner) {
+      // อัปเดตข้อมูลที่มีอยู่
+      const updatedPartner = await Partner.findByIdAndUpdate(
+        existingPartner._id,
+        {
+          companyName: "โรงแรมสวัสดีรีสอร์ท",
+          hotelName: "สวัสดีรีสอร์ท",
+          imageHotelOurDoor: "/imgHotel/hotel/loginCompany.jpg",
+          status: "approved",
+          isProfileComplete: true
+        },
+        { new: true }
+      );
+      
+      return res.status(200).json({
+        message: "อัปเดตข้อมูลทดสอบสำเร็จ",
+        partner: updatedPartner
+      });
+    } else {
+      // สร้างข้อมูลใหม่
+      const testPartner = new Partner({
+        username: "testhotel",
+        password: await bcrypt.hash("123456", 10),
+        firstname: "ทดสอบ",
+        lastname: "โรงแรม",
+        sex: "ชาย",
+        email: "test@hotel.com",
+        phone: "0812345678",
+        idenNumber: "1234567890123",
+        visaNumber: "V123456789",
+        companyName: "โรงแรมสวัสดีรีสอร์ท",
+        hotelName: "สวัสดีรีสอร์ท",
+        imageHotelOurDoor: "/imgHotel/hotel/loginCompany.jpg",
+        hotelLatitude: 13.7563,
+        hotelLongitude: 100.5018,
+        status: "approved",
+        isProfileComplete: true
+      });
+      
+      const savedPartner = await testPartner.save();
+      
+      return res.status(201).json({
+        message: "สร้างข้อมูลทดสอบสำเร็จ",
+        partner: savedPartner
+      });
+    }
+  } catch (error) {
+    console.error("Error creating test data:", error);
+    res.status(500).json({ message: "เกิดข้อผิดพลาดจากเซิร์ฟเวอร์" });
+  }
+};
+

@@ -47,6 +47,7 @@ exports.createRoom = (req, res) => {
         price: req.body.price,
         stayPeople: req.body.stayPeople,
         roomDetail: req.body.roomDetail,
+        air: req.body.air,
         imgrooms: imgrooms, // array ของชื่อไฟล์
         typeRoom: req.body.typeRoom, // ObjectId
         typeRoomHotel: req.body.typeRoomHotel
@@ -106,6 +107,7 @@ exports.updateRoom = (req, res) => {
       room.price = req.body.price ?? room.price;
       room.stayPeople = req.body.stayPeople ?? room.stayPeople;
       room.roomDetail = req.body.roomDetail ?? room.roomDetail;
+      room.air = req.body.air ?? room.air;
       room.typeRoom = req.body.typeRoom ?? room.typeRoom;
       room.typeRoomHotel = req.body.typeRoomHotel
         ? Array.isArray(req.body.typeRoomHotel)
@@ -142,6 +144,24 @@ exports.updateRoomStatus = async (req, res) => {
     const room = await Room.findById(id);
     if (!room) {
       return res.status(404).json({ message: "Room not found" });
+    }
+
+    // ตรวจสอบโควต้าเมื่อเปลี่ยนเป็น SleepGunWeb
+    if (status === "SleepGunWeb" && room.status !== "SleepGunWeb") {
+      // นับจำนวนห้องที่มีสถานะ SleepGunWeb ของ partner นี้
+      const sleepGunCount = await Room.countDocuments({
+        partnerId: req.user.id,
+        status: "SleepGunWeb"
+      });
+
+      // ตรวจสอบโควต้า (5 ห้อง)
+      if (sleepGunCount >= 5) {
+        return res.status(400).json({ 
+          message: "โควต้าห้อง SleepGun เต็มแล้ว (สูงสุด 5 ห้องต่อ partner)",
+          currentCount: sleepGunCount,
+          maxQuota: 5
+        });
+      }
     }
 
     // อัปเดตสถานะ
@@ -222,6 +242,30 @@ exports.getStatusOptions = (req, res) => {
   try {
     const statusOptions = ["SleepGunWeb", "Walkin"];
     res.json(statusOptions);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ดึงข้อมูลโควต้า SleepGun ของ partner
+exports.getSleepGunQuota = async (req, res) => {
+  try {
+    // นับจำนวนห้องที่มีสถานะ SleepGunWeb ของ partner นี้
+    const sleepGunCount = await Room.countDocuments({
+      partnerId: req.user.id,
+      status: "SleepGunWeb"
+    });
+
+    // ดึงข้อมูลโควต้า
+    const quota = 5; // โควต้าสูงสุด
+    const remaining = Math.max(0, quota - sleepGunCount);
+
+    res.json({
+      currentCount: sleepGunCount,
+      maxQuota: quota,
+      remaining: remaining,
+      isFull: sleepGunCount >= quota
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

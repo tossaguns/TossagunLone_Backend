@@ -26,6 +26,9 @@ router.delete("/Delete:id", verifyToken, roomController.deleteRoomById);
 
 router.get("/status-options", verifyToken, roomController.getStatusOptions);
 
+// ดึงข้อมูลโควต้า SleepGun
+router.get("/sleepgun-quota", verifyToken, roomController.getSleepGunQuota);
+
 router.patch("/update:id/status", verifyToken, roomController.updateRoomStatus);
 
 

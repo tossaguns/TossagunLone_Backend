@@ -11,6 +11,8 @@ router.post(
 
 router.get("/getAll", partnerController.getAllPartners);
 router.get("/get/:id", partnerController.getPartnerById);
+router.get("/hotelLogin/:partnerId", partnerController.getHotelLoginData);
+router.post("/createTestData", partnerController.createTestHotelData);
 router.put("/update/:id", partnerController.updatePartnerById);
 router.delete("/delete/:id", partnerController.deletePartnerById);
 router.delete("/deleteAll", partnerController.deleteAllPartners);

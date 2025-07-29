@@ -1,56 +1,78 @@
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
 const Employee = require("../../models/user/employee.schema");
-const fs = require("fs");
-const path = require("path");
+const bcrypt = require("bcryptjs");
 
-// สร้าง Employee โดย Partner
-exports.createEmployee = async (req, res) => {
+// อัปเดต password ของ employee ที่เป็น plain text ให้เป็น encrypted
+exports.updatePlainTextPasswords = async (req, res) => {
   try {
-    const {
-      username,
-      password,
-      firstname,
-      lastname,
-      nickname,
-      sex,
-      email,
-      phone,
-      employeeCode,
-      positionEmployee,
-      statusByPartner,
-    } = req.body;
-
-    const exist = await Employee.findOne({ username });
-    if (exist) {
-      return res.status(400).json({ message: "มีผู้ใช้นี้อยู่แล้ว" });
-    }
-
-    let passwordToSave = password;
-    if (statusByPartner === 'adminPartner') {
-      passwordToSave = await bcrypt.hash(password, 10);
-    }
-    // ถ้าไม่ใช่ adminPartner (เช่น partner เพิ่มพนักงาน) จะเก็บ plain text
-    const employee = new Employee({
-      username,
-      password: passwordToSave,
-      firstname,
-      lastname,
-      nickname,
-      sex,
-      email,
-      phone,
-      employeeCode,
-      positionEmployee,
-      statusByPartner,
-      imageIden: req.file?.path || "",
-      partnerId: req.user.id, // เพิ่ม partnerId
+    // หา employee ที่มี password เป็น plain text (ไม่ขึ้นต้นด้วย $2b$ หรือ $2a$)
+    const employees = await Employee.find({
+      password: { $not: /^\$2[ab]\$/ }
     });
 
-    await employee.save();
-    res.status(201).json({ message: "สร้างพนักงานสำเร็จ", employee });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.log(`Found ${employees.length} employees with plain text passwords`);
+
+    const updatePromises = employees.map(async (employee) => {
+      // เข้ารหัส password ด้วย bcrypt
+      const hashedPassword = await bcrypt.hash(employee.password, 10);
+      
+      // อัปเดต password ในฐานข้อมูล
+      return Employee.findByIdAndUpdate(
+        employee._id,
+        { password: hashedPassword },
+        { new: true }
+      );
+    });
+
+    const updatedEmployees = await Promise.all(updatePromises);
+
+    res.status(200).json({
+      message: `อัปเดต password ของ ${updatedEmployees.length} employee สำเร็จ`,
+      updatedCount: updatedEmployees.length
+    });
+  } catch (error) {
+    console.error("Error updating passwords:", error);
+    res.status(500).json({ message: "เกิดข้อผิดพลาดจากเซิร์ฟเวอร์" });
+  }
+};
+
+// สร้าง employee ใหม่
+exports.createEmployee = async (req, res) => {
+  try {
+    const { username, password, firstname, lastname, nickname, sex, email, phone, employeeCode, positionEmployee, statusByPartner, partnerId } = req.body;
+
+    // ตรวจสอบว่า username ซ้ำหรือไม่
+    const existingEmployee = await Employee.findOne({ username });
+    if (existingEmployee) {
+      return res.status(400).json({ message: "Username นี้มีอยู่ในระบบแล้ว" });
+    }
+
+    // เข้ารหัส password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const employee = new Employee({
+      username,
+      password: hashedPassword,
+      firstname,
+      lastname,
+      nickname,
+      sex,
+      email,
+      phone,
+      employeeCode,
+      positionEmployee,
+      statusByPartner,
+      partnerId
+    });
+
+    const savedEmployee = await employee.save();
+
+    res.status(201).json({
+      message: "สร้าง employee สำเร็จ",
+      employee: savedEmployee
+    });
+  } catch (error) {
+    console.error("Error creating employee:", error);
+    res.status(500).json({ message: "เกิดข้อผิดพลาดจากเซิร์ฟเวอร์" });
   }
 };
 

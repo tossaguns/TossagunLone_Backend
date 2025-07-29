@@ -17,6 +17,10 @@ const typeHotelLocationSchema = new Schema(
       type: String,
       default: "",
     },
+    detailByPartner: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,

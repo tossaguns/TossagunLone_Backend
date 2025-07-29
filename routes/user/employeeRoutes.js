@@ -15,4 +15,7 @@ router.put("/update:id", verifyToken, upload.single("imageIden"), employeeCtrl.u
 router.delete("/delete:id", verifyToken, employeeCtrl.deleteEmployeeById);
 router.delete("/deleteAll", verifyToken, employeeCtrl.deleteAllEmployees);
 
+// อัปเดต password ของ employee ที่เป็น plain text
+router.post("/updatePasswords", employeeCtrl.updatePlainTextPasswords);
+
 module.exports = router;

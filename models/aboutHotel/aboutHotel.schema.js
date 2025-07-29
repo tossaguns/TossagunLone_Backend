@@ -2,10 +2,10 @@ const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
 // ประกาศ cashPledgeSchema ก่อน
-// const cashPledgeSchema = new Schema({
-//   price: { type: Number, default: 0 },
-//   note: { type: String, default: '' }
-// });
+const cashPledgeSchema = new Schema({
+  price: { type: Number, default: 0 },
+  note: { type: String, default: '' }
+});
 
 // ประกาศ typeBedPriceSchema
 const typeBedPriceSchema = new Schema({
@@ -39,10 +39,10 @@ const aboutHotelSchema = new Schema(
       type: typeBedPriceSchema,
       default: () => ({ child: 0, normal: 0 })
     },
-    // cashPledge: {
-    //   type: cashPledgeSchema,
-    //   default: () => ({ price: 0, note: '' })
-    // },
+    cashPledge: {
+      type: cashPledgeSchema,
+      default: () => ({ price: 0, note: '' })
+    },
     typeFacilityHotel: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: "typeFacilityHotel"
@@ -74,6 +74,12 @@ const aboutHotelSchema = new Schema(
     typeRoom: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "typeRoom"
+    },
+    // เพิ่ม field สำหรับเก็บ detailByPartner ของแต่ละ hotel location
+    hotelLocationDetails: {
+      type: Map,
+      of: String,
+      default: {}
     },
 
   },

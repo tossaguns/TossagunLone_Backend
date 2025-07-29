@@ -4,7 +4,7 @@ const AboutHotel = require("../../models/aboutHotel/aboutHotel.schema")
 exports.createAboutHotel = async (req, res) => {
   try {
     // Filter out any cashPledge related fields from request body
-    // const { cashPledge, ...aboutHotelData } = req.body
+    const { cashPledge, ...aboutHotelData } = req.body
     
     const newAboutHotel = new AboutHotel(req.body)
     const saved = await newAboutHotel.save()
@@ -74,7 +74,7 @@ exports.getAboutHotelById = async (req, res) => {
 exports.updateAboutHotel = async (req, res) => {
   try {
     // Filter out any cashPledge related fields from request body
-    // const { cashPledge, ...updateData } = req.body
+    const { cashPledge, ...updateData } = req.body
     
     const updated = await AboutHotel.findByIdAndUpdate(
       req.params.id,

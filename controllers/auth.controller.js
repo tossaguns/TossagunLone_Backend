@@ -13,21 +13,37 @@ exports.login = async (req, res) => {
     const employee = await Employee.findOne({ username });
     console.log("employee:", employee);
     if (employee) {
-      const isMatch = await bcrypt.compare(password, employee.password);
+      let isMatch = false;
+      
+      // ตรวจสอบว่า password เป็น plain text หรือ encrypted
+      if (employee.password.startsWith('$2b$') || employee.password.startsWith('$2a$')) {
+        // ถ้าเป็น encrypted password ใช้ bcrypt.compare
+        isMatch = await bcrypt.compare(password, employee.password);
+      } else {
+        // ถ้าเป็น plain text เปรียบเทียบโดยตรง
+        isMatch = password === employee.password;
+      }
+      
       console.log("isMatch (employee):", isMatch);
       if (!isMatch) return res.status(401).json({ message: "รหัสผ่านไม่ถูกต้อง" });
 
       const token = jwt.sign(
-        { id: employee._id, role: employee.statusByPartner, type: "employee" },
+        { id: employee._id, role: employee.statusByPartner, type: "employee", partnerId: employee.partnerId },
         process.env.JWT_SECRET,
         { expiresIn: "1d" }
       );
+
+      // สร้าง user object ที่มี partnerId
+      const userData = {
+        ...employee.toObject(),
+        partnerId: employee.partnerId
+      };
 
       return res.json({
         message: "เข้าสู่ระบบสำเร็จ (Employee)",
         token,
         role: employee.statusByPartner,
-        user: employee,
+        user: userData,
       });
     }
 
