@@ -3,9 +3,13 @@ const { Schema } = mongoose;
 
 const tagPOSSchema = new Schema(
   {
+    partnerId: { 
+      type: Schema.Types.ObjectId, 
+      ref: 'partner', 
+      required: true 
+    },
     name: {
       type: String,
-      unique: true,
       trim: true,
     },
     description: {

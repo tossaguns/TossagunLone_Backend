@@ -1,6 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const controller = require("../../controllers/POS/tag.controller");
+const { verifyPartnerAuth } = require("../../middlewares/partnerAuth.middleware");
+
+// Apply authentication middleware to all routes
+router.use(verifyPartnerAuth);
 
 // Create new tag
 router.post("/create", controller.createTag);

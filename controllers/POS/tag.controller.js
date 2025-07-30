@@ -4,6 +4,7 @@ const tagPOS = require("../../models/POS/tag.schema");
 const createTag = async (req, res) => {
   try {
     const { name, description, color } = req.body;
+    const partnerId = req.partner.id; // Get partner ID from authenticated user
 
     // Validate required fields
     if (!name || !name.trim()) {
@@ -13,8 +14,11 @@ const createTag = async (req, res) => {
       });
     }
 
-    // Check if tag name already exists
-    const existingTag = await tagPOS.findOne({ name: name.trim() });
+    // Check if tag name already exists for this partner
+    const existingTag = await tagPOS.findOne({ 
+      name: name.trim(), 
+      partnerId 
+    });
     if (existingTag) {
       return res.status(400).json({
         success: false,
@@ -24,6 +28,7 @@ const createTag = async (req, res) => {
 
     // Create new tag
     const newTag = new tagPOS({
+      partnerId, // Associate with authenticated partner
       name: name.trim(),
       description: description || "",
       color: color || "#FFBB00"
@@ -47,10 +52,12 @@ const createTag = async (req, res) => {
   }
 };
 
-// Get all tags
+// Get all tags (only for authenticated partner)
 const getAllTags = async (req, res) => {
   try {
-    const tags = await tagPOS.find().sort({ createdAt: -1 });
+    const partnerId = req.partner.id; // Get partner ID from authenticated user
+    
+    const tags = await tagPOS.find({ partnerId }).sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
@@ -69,12 +76,13 @@ const getAllTags = async (req, res) => {
   }
 };
 
-// Get tag by ID
+// Get tag by ID (only for authenticated partner)
 const getTagById = async (req, res) => {
   try {
     const { id } = req.params;
+    const partnerId = req.partner.id; // Get partner ID from authenticated user
 
-    const tag = await tagPOS.findById(id);
+    const tag = await tagPOS.findOne({ _id: id, partnerId });
     if (!tag) {
       return res.status(404).json({
         success: false,
@@ -98,14 +106,15 @@ const getTagById = async (req, res) => {
   }
 };
 
-// Update tag by ID
+// Update tag by ID (only for authenticated partner)
 const updateTag = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, color } = req.body;
+    const partnerId = req.partner.id; // Get partner ID from authenticated user
 
-    // Check if tag exists
-    const existingTag = await tagPOS.findById(id);
+    // Check if tag exists and belongs to the authenticated partner
+    const existingTag = await tagPOS.findOne({ _id: id, partnerId });
     if (!existingTag) {
       return res.status(404).json({
         success: false,
@@ -113,10 +122,11 @@ const updateTag = async (req, res) => {
       });
     }
 
-    // Check if new name already exists (if name is being updated)
+    // Check if new name already exists for this partner (if name is being updated)
     if (name && name.trim() !== existingTag.name) {
       const duplicateTag = await tagPOS.findOne({ 
         name: name.trim(),
+        partnerId,
         _id: { $ne: id } // Exclude current tag
       });
       if (duplicateTag) {
@@ -154,18 +164,22 @@ const updateTag = async (req, res) => {
   }
 };
 
-// Delete tag by ID
+// Delete tag by ID (only for authenticated partner)
 const deleteTagById = async (req, res) => {
   try {
     const { id } = req.params;
+    const partnerId = req.partner.id; // Get partner ID from authenticated user
 
-    const deletedTag = await tagPOS.findByIdAndDelete(id);
-    if (!deletedTag) {
+    // Check if tag exists and belongs to the authenticated partner
+    const existingTag = await tagPOS.findOne({ _id: id, partnerId });
+    if (!existingTag) {
       return res.status(404).json({
         success: false,
         message: "ไม่พบแท็กที่ต้องการลบ"
       });
     }
+
+    const deletedTag = await tagPOS.findByIdAndDelete(id);
 
     res.status(200).json({
       success: true,
@@ -183,10 +197,12 @@ const deleteTagById = async (req, res) => {
   }
 };
 
-// Delete all tags
+// Delete all tags (only for authenticated partner)
 const deleteAllTags = async (req, res) => {
   try {
-    const result = await tagPOS.deleteMany({});
+    const partnerId = req.partner.id; // Get partner ID from authenticated user
+    
+    const result = await tagPOS.deleteMany({ partnerId });
 
     res.status(200).json({
       success: true,

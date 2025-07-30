@@ -3,7 +3,11 @@ const { Schema } = mongoose;
 
 const posSchema = new Schema(
   {
-
+    partnerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "partner",
+      required: true
+    },
     buildingCount: {
       type: Number,
       default: 0,
