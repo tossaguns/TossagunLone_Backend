@@ -47,6 +47,7 @@ app.use(
   require("./routes/approvePartnerRoutes")
 );
 
+app.use(prefix + "/tag", require("./routes/POS/tagRoutes"));
 app.use(prefix + "/aboutHotel", require("./routes/aboutHotel/aboutHotelRoutes"));
 app.use(prefix + "/partner", require("./routes/user/partnerRoutes"));
 app.use(prefix + "/partnerLogin", require("./routes/login/partnerLoginRoutes"));
@@ -91,6 +92,7 @@ app.use(
 );
 app.use(prefix + "/promotion", require("./routes/promotionRoutes"));
 app.use(prefix + "/provinceData", require("./routes/provinceDataRoutes"));
+app.use(prefix + "/tag", require("./routes/POS/tagRoutes"));
 
 app.get(prefix + "/test", (req, res) => res.send("✅ Test OK with prefix"));
 
