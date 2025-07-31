@@ -19,6 +19,14 @@ const buildingSchema = new Schema(
     },
     imgBG: { type: String },
 
+    // เพิ่ม floors field เพื่อเก็บข้อมูลชั้นในแต่ละตึก
+    floors: [{
+      name: { type: String, required: true },
+      description: { type: String },
+      roomCount: { type: Number, default: 0 },
+      createdAt: { type: Date, default: Date.now }
+    }],
+
   },
   { timestamps: true }
 );
