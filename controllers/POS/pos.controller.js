@@ -29,12 +29,45 @@ const upload = multer({
 // ==================== HELPER FUNCTIONS ====================
 const updatePosStatistics = async (partnerId) => {
   try {
+    console.log('🔄 Updating POS statistics for partnerId:', partnerId);
+    
+    // ดึงข้อมูลปัจจุบัน
+    const buildings = await building.find({ partnerId });
+    const rooms = await room.find({ partnerId });
+    const sleepGunRooms = rooms.filter(room => room.status === 'SleepGunWeb');
+    
+    let totalFloorCount = 0;
+    buildings.forEach(buildingDoc => {
+      if (buildingDoc.floors && Array.isArray(buildingDoc.floors)) {
+        totalFloorCount += buildingDoc.floors.length;
+      }
+    });
+    
+    // อัปเดตหรือสร้างข้อมูล POS
     const posData = await pos.findOne({ partnerId });
     if (posData) {
-      await posData.updateStatistics();
+      posData.buildingCount = buildings.length;
+      posData.floorCount = totalFloorCount;
+      posData.roomCount = rooms.length;
+      posData.roomCountSleepGun = sleepGunRooms.length;
+      posData.quotaRoomSleepGun = 5;
+      await posData.save();
+      console.log('✅ Updated existing POS statistics');
+    } else {
+      // สร้างข้อมูล POS ใหม่
+      const newPos = new pos({
+        partnerId,
+        buildingCount: buildings.length,
+        floorCount: totalFloorCount,
+        roomCount: rooms.length,
+        roomCountSleepGun: sleepGunRooms.length,
+        quotaRoomSleepGun: 5
+      });
+      await newPos.save();
+      console.log('✅ Created new POS statistics');
     }
   } catch (error) {
-    console.error("Error updating POS statistics:", error);
+    console.error("❌ Error updating POS statistics:", error);
   }
 };
 
@@ -153,17 +186,38 @@ const getPosById = async (req, res) => {
 const getPosSummary = async (req, res) => {
   try {
     const partnerId = req.partner.id;
+    console.log('🔍 Getting POS summary for partnerId:', partnerId);
     
-    const posData = await pos.find({ partnerId });
+    // ดึงข้อมูลจริงจากตาราง buildings และ rooms
+    const buildings = await building.find({ partnerId });
+    const rooms = await room.find({ partnerId });
+    
+    console.log('🏢 Found buildings:', buildings.length);
+    console.log('🏠 Found rooms:', rooms.length);
+    
+    // นับจำนวนห้องที่เป็น SleepGunWeb
+    const sleepGunRooms = rooms.filter(room => room.status === 'SleepGunWeb');
+    console.log('💤 SleepGun rooms:', sleepGunRooms.length);
+    
+    // คำนวณจำนวนชั้นทั้งหมด
+    let totalFloorCount = 0;
+    buildings.forEach(buildingDoc => {
+      if (buildingDoc.floors && Array.isArray(buildingDoc.floors)) {
+        totalFloorCount += buildingDoc.floors.length;
+      }
+    });
+    console.log('🏢 Total floors:', totalFloorCount);
     
     const summary = {
-      totalBuildingCount: posData.reduce((sum, pos) => sum + (pos.buildingCount || 0), 0),
-      totalFloorCount: posData.reduce((sum, pos) => sum + (pos.floorCount || 0), 0),
-      totalRoomCount: posData.reduce((sum, pos) => sum + (pos.roomCount || 0), 0),
-      totalRoomCountSleepGun: posData.reduce((sum, pos) => sum + (pos.roomCountSleepGun || 0), 0),
-      totalQuotaRoomSleepGun: posData.reduce((sum, pos) => sum + (pos.quotaRoomSleepGun || 5), 0),
-      totalPosRecords: posData.length
+      totalBuildingCount: buildings.length,
+      totalFloorCount: totalFloorCount,
+      totalRoomCount: rooms.length,
+      totalRoomCountSleepGun: sleepGunRooms.length,
+      totalQuotaRoomSleepGun: 5, // โควต้าเริ่มต้น
+      totalPosRecords: buildings.length + rooms.length
     };
+
+    console.log('📊 POS Summary:', summary);
 
     res.status(200).json({
       success: true,
@@ -298,6 +352,7 @@ const createBuilding = async (req, res) => {
     });
 
     const savedBuilding = await newBuilding.save();
+    console.log('✅ Building saved, updating statistics...');
     await updatePosStatistics(partnerId);
 
     res.status(201).json({
@@ -354,6 +409,7 @@ const addFloorToBuilding = async (req, res) => {
     });
 
     const updatedBuilding = await buildingData.save();
+    console.log('✅ Floor added, updating statistics...');
     await updatePosStatistics(partnerId);
 
     res.status(200).json({
@@ -402,6 +458,7 @@ const removeFloorFromBuilding = async (req, res) => {
     // ลบชั้นออก
     buildingData.floors = buildingData.floors.filter(floor => floor.name !== floorName);
     const updatedBuilding = await buildingData.save();
+    console.log('✅ Floor removed, updating statistics...');
     await updatePosStatistics(partnerId);
 
     res.status(200).json({
@@ -524,6 +581,7 @@ const updateBuilding = async (req, res) => {
       { new: true }
     );
 
+    console.log('✅ Building updated, updating statistics...');
     await updatePosStatistics(partnerId);
 
     res.status(200).json({
@@ -555,6 +613,7 @@ const deleteBuilding = async (req, res) => {
     }
 
     const deletedBuilding = await building.findByIdAndDelete(id);
+    console.log('✅ Building deleted, updating statistics...');
     await updatePosStatistics(partnerId);
 
     res.status(200).json({
@@ -609,6 +668,7 @@ const createRoom = (req, res) => {
             ? req.body.typeRoomHotel
             : [req.body.typeRoomHotel]
           : [],
+              tag: req.body.tag ? (Array.isArray(req.body.tag) ? req.body.tag : [req.body.tag]) : [],
         partnerId: req.partner.id,
       };
 
@@ -625,6 +685,7 @@ const createRoom = (req, res) => {
         }
       }
 
+      console.log('✅ Room created, updating statistics...');
       await updatePosStatistics(req.partner.id);
 
       res.status(201).json(savedRoom);
@@ -638,7 +699,8 @@ const getAllRooms = async (req, res) => {
   try {
     const rooms = await room.find({ partnerId: req.partner.id })
       .populate("typeRoom")
-      .populate("typeRoomHotel");
+      .populate("typeRoomHotel")
+      .populate("tag", "name color description");
     res.json(rooms);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -658,7 +720,8 @@ const getRoomsByBuildingAndFloor = async (req, res) => {
     })
       .populate("typeRoom")
       .populate("typeRoomHotel")
-      .populate("buildingId", "nameBuilding");
+      .populate("buildingId", "nameBuilding")
+      .populate("tag", "name color description");
       
     res.status(200).json({
       success: true,
@@ -687,7 +750,8 @@ const getRoomsByFloor = async (req, res) => {
     })
       .populate("typeRoom")
       .populate("typeRoomHotel")
-      .populate("buildingId", "nameBuilding");
+      .populate("buildingId", "nameBuilding")
+      .populate("tag", "name color description");
       
     res.status(200).json({
       success: true,
@@ -708,7 +772,8 @@ const getRoomById = async (req, res) => {
   try {
     const roomData = await room.findById(req.params.id)
       .populate("typeRoom")
-      .populate("typeRoomHotel");
+      .populate("typeRoomHotel")
+      .populate("tag", "name color description");
     if (!roomData) return res.status(404).json({ message: "Room not found" });
     res.json(roomData);
   } catch (error) {
@@ -738,11 +803,17 @@ const updateRoom = (req, res) => {
           : [req.body.typeRoomHotel]
         : roomData.typeRoomHotel;
 
+      // อัปเดต tag
+      if (req.body.tag !== undefined) {
+        roomData.tag = req.body.tag ? (Array.isArray(req.body.tag) ? req.body.tag : [req.body.tag]) : [];
+      }
+
       if (req.files && req.files.length > 0) {
         roomData.imgrooms = req.files.map((file) => file.filename);
       }
 
       const updatedRoom = await roomData.save();
+      console.log('✅ Room updated, updating statistics...');
       await updatePosStatistics(req.partner.id);
 
       res.json(updatedRoom);
@@ -784,6 +855,7 @@ const updateRoomStatus = async (req, res) => {
 
     roomData.status = status;
     const updatedRoom = await roomData.save();
+    console.log('✅ Room status updated, updating statistics...');
     await updatePosStatistics(req.partner.id);
 
     res.json(updatedRoom);
@@ -1106,7 +1178,7 @@ const getCompletePosData = async (req, res) => {
     const [posData, buildings, rooms, tags] = await Promise.all([
       pos.find({ partnerId }).populate('tags').populate('buildings').populate('rooms'),
       building.find({ partnerId }),
-      room.find({ partnerId }).populate('typeRoom').populate('typeRoomHotel'),
+      room.find({ partnerId }).populate('typeRoom').populate('typeRoomHotel').populate('tag', 'name color description'),
       tagPOS.find({ partnerId })
     ]);
 
@@ -1142,6 +1214,91 @@ const getCompletePosData = async (req, res) => {
   }
 };
 
+// ==================== FLOOR MANAGEMENT ====================
+const updateFloorName = async (req, res) => {
+  try {
+    const { buildingId, oldFloorName } = req.params;
+    const { newFloorName } = req.body;
+    const partnerId = req.partner.id;
+
+    console.log('🏢 Updating floor name:', { buildingId, oldFloorName, newFloorName, partnerId });
+
+    // ตรวจสอบข้อมูลที่จำเป็น
+    if (!newFloorName || !newFloorName.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "กรุณากรอกชื่อชั้นใหม่"
+      });
+    }
+
+    // ค้นหาตึก
+    const buildingDoc = await building.findOne({ _id: buildingId, partnerId });
+    if (!buildingDoc) {
+      return res.status(404).json({
+        success: false,
+        message: "ไม่พบตึกที่ต้องการแก้ไข"
+      });
+    }
+
+    // ตรวจสอบว่าชั้นที่ต้องการแก้ไขมีอยู่หรือไม่
+    const floorIndex = buildingDoc.floors.findIndex(floor => floor.name === oldFloorName);
+    if (floorIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "ไม่พบชั้นที่ต้องการแก้ไข"
+      });
+    }
+
+    // ตรวจสอบว่าชื่อชั้นใหม่ซ้ำกับชั้นอื่นหรือไม่
+    const isDuplicate = buildingDoc.floors.some(floor => floor.name === newFloorName.trim());
+    if (isDuplicate) {
+      return res.status(400).json({
+        success: false,
+        message: "ชื่อชั้นนี้มีอยู่แล้ว กรุณาใช้ชื่ออื่น"
+      });
+    }
+
+    // อัปเดตชื่อชั้น
+    buildingDoc.floors[floorIndex].name = newFloorName.trim();
+    await buildingDoc.save();
+
+    // อัปเดตชื่อชั้นในห้องที่เกี่ยวข้อง
+    await room.updateMany(
+      { 
+        buildingId: buildingId, 
+        floor: oldFloorName,
+        partnerId 
+      },
+      { 
+        $set: { floor: newFloorName.trim() } 
+      }
+    );
+
+    // อัปเดตสถิติ
+    await updatePosStatistics(partnerId);
+
+    console.log('✅ Floor name updated successfully');
+
+    res.status(200).json({
+      success: true,
+      message: "อัปเดตชื่อชั้นเรียบร้อยแล้ว",
+      data: {
+        buildingId,
+        oldFloorName,
+        newFloorName: newFloorName.trim()
+      }
+    });
+
+  } catch (error) {
+    console.error("❌ Error updating floor name:", error);
+    res.status(500).json({
+      success: false,
+      message: "เกิดข้อผิดพลาดในการอัปเดตชื่อชั้น",
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   // POS Controllers
   createPos,
@@ -1161,6 +1318,7 @@ module.exports = {
   addFloorToBuilding,
   removeFloorFromBuilding,
   getFloorsByBuilding,
+  updateFloorName,
   
   // Room Controllers
   createRoom,

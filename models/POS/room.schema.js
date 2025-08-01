@@ -3,7 +3,6 @@ const { Schema } = mongoose;
 
 const roomSchema = new Schema(
   {
-
     //มาเพิ่มราคาที่ลดเเล้ว เเละสถานะปุ่ม radio
     roomNumber: {
       type: String,
@@ -26,8 +25,16 @@ const roomSchema = new Schema(
       default: [],
       validate: [arrayLimit, "{PATH} exceeds the limit of 10"],
     },
-    partnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner', required: true },
-    buildingId: { type: mongoose.Schema.Types.ObjectId, ref: 'building', required: true }, // เพิ่ม buildingId
+    partnerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Partner",
+      required: true,
+    },
+    buildingId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "building",
+      required: true,
+    }, // เพิ่ม buildingId
     typeRoomHotel: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -38,6 +45,12 @@ const roomSchema = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "TypeRoom",
     },
+    tag: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "tagPOS",
+      },
+    ],
     status: {
       type: String,
       enum: ["SleepGunWeb", "Walkin"],
@@ -66,7 +79,7 @@ const roomSchema = new Schema(
     quota: {
       type: Number,
       default: 5, // โควต้าเริ่มต้น 5 ห้องต่อ partner
-    }, 
+    },
   },
   {
     timestamps: true,

@@ -47,6 +47,9 @@ router.post("/buildings/:buildingId/floors", verifyPartnerAuth, posController.ad
 // ลบชั้นจากตึก
 router.delete("/buildings/:buildingId/floors/:floorName", verifyPartnerAuth, posController.removeFloorFromBuilding);
 
+// อัปเดตชื่อชั้น
+router.patch("/buildings/:buildingId/floors/:oldFloorName", verifyPartnerAuth, posController.updateFloorName);
+
 // ดึงชั้นในตึก
 router.get("/buildings/:buildingId/floors", verifyPartnerAuth, posController.getFloorsByBuilding);
 

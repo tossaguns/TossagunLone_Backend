@@ -32,4 +32,4 @@ const buildingSchema = new Schema(
 );
 
 const building = mongoose.model("building", buildingSchema);
-module.exports = building;
+module.exports = building; 
