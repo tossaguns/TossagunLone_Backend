@@ -1,10 +1,10 @@
-const TypeRoom = require("../../models/typeHotel/typeRoom.schema");
+const typeRoom = require("../../models/typeHotel/typeRoom.schema");
 
 exports.createTypeRoom = async (req, res) => {
   try {
     const { name, description } = req.body;
     const icon = req.file ? req.file.filename : "";
-    const room = new TypeRoom({ name, icon, description });
+    const room = new typeRoom({ name, icon, description });
     await room.save();
     res.status(201).json(room);
   } catch (error) {
@@ -14,7 +14,7 @@ exports.createTypeRoom = async (req, res) => {
 // GET ALL
 exports.getAllTypeRoom = async (req, res) => {
   try {
-    const room = await TypeRoom.find();
+    const room = await typeRoom.find();
     res.status(200).json(room);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -25,7 +25,7 @@ exports.getAllTypeRoom = async (req, res) => {
 exports.deleteTypeRoomById = async (req, res) => {
   try {
     const { id } = req.params;
-    const deleted = await TypeRoom.findByIdAndDelete(id);
+    const deleted = await typeRoom.findByIdAndDelete(id);
     if (!deleted) {
       return res.status(404).json({ message: "Not found" });
     }
@@ -38,7 +38,7 @@ exports.deleteTypeRoomById = async (req, res) => {
 // DELETE ALL
 exports.deleteAllTypeRoom = async (req, res) => {
   try {
-    await TypeRoom.deleteMany({});
+    await typeRoom.deleteMany({});
     res.status(200).json({ message: "All room deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -55,7 +55,7 @@ exports.updateTypeRoomById = async (req, res) => {
     const updateData = { name, description };
     if (icon !== undefined) updateData.icon = icon;
 
-    const updated = await TypeRoom.findByIdAndUpdate(id, updateData, {
+    const updated = await typeRoom.findByIdAndUpdate(id, updateData, {
       new: true,
     });
 

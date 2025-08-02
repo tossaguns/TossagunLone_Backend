@@ -93,6 +93,13 @@ router.delete("/rooms/:id", verifyPartnerAuth, posController.deleteRoomById);
 // ดึงข้อมูลห้องพักตาม ID (ต้องอยู่หลัง routes อื่นๆ)
 router.get("/rooms/:id", verifyPartnerAuth, posController.getRoomById);
 
+// ==================== ROOM SEARCH ROUTES ====================
+// ค้นหาห้องว่างตามช่วงวันที่
+router.post("/rooms/search-by-date", verifyPartnerAuth, posController.searchAvailableRoomsByDateRange);
+
+// ล้างการค้นหาห้องว่าง
+router.delete("/rooms/search", verifyPartnerAuth, posController.clearRoomSearch);
+
 // ==================== TAG ROUTES ====================
 // สร้างแท็กใหม่
 router.post("/tags", verifyPartnerAuth, posController.createTag);
@@ -111,6 +118,19 @@ router.delete("/tags/:id", verifyPartnerAuth, posController.deleteTagById);
 
 // ดึงข้อมูลแท็กตาม ID (ต้องอยู่หลัง routes อื่นๆ)
 router.get("/tags/:id", verifyPartnerAuth, posController.getTagById);
+
+// ==================== ABOUT HOTEL ROUTES ====================
+// ดึงข้อมูล about hotel
+router.get("/about-hotel", verifyPartnerAuth, posController.getAboutHotel);
+
+// สร้างหรืออัปเดตข้อมูล about hotel
+router.post("/about-hotel", verifyPartnerAuth, posController.createOrUpdateAboutHotel);
+
+// อัปเดตข้อมูล about hotel
+router.put("/about-hotel/:id", verifyPartnerAuth, posController.updateAboutHotel);
+
+// ลบข้อมูล about hotel
+router.delete("/about-hotel/:id", verifyPartnerAuth, posController.deleteAboutHotel);
 
 // ==================== COMPREHENSIVE DATA ROUTES ====================
 // ดึงข้อมูล POS ทั้งหมดพร้อมข้อมูลที่เกี่ยวข้อง

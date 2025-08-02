@@ -21,6 +21,6 @@ const typeRoomSchema = new Schema(
   }
 );
 
-const TypeRoom = mongoose.model("TypeRoom", typeRoomSchema);
+const typeRoom = mongoose.model("typeRoom", typeRoomSchema);
 
-module.exports = TypeRoom;
+module.exports = typeRoom;

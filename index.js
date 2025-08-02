@@ -49,7 +49,6 @@ app.use(
 
 // ใช้ POS routes ที่รวมทุกฟังก์ชันไว้ด้วยกัน
 app.use(prefix + "/pos", require("./routes/POS/pos.routes"));
-app.use(prefix + "/aboutHotel", require("./routes/aboutHotel/aboutHotelRoutes"));
 app.use(prefix + "/partner", require("./routes/user/partnerRoutes"));
 app.use(prefix + "/partnerLogin", require("./routes/login/partnerLoginRoutes"));
 
