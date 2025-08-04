@@ -7,11 +7,18 @@ const jwt = require("jsonwebtoken");
 exports.login = async (req, res) => {
   console.log("BODY:", req.body); // log body ที่รับมา
   console.log("JWT_SECRET:", process.env.JWT_SECRET ? 'SET' : 'NOT SET'); // log ว่ามี JWT_SECRET หรือไม่
-  const { username, password } = req.body;
+  const { username, password, partnerId } = req.body;
 
   try {
-    const employee = await Employee.findOne({ username });
+    // ดึง employee ตาม username และ partnerId (ถ้ามี)
+    let employeeQuery = { username };
+    if (partnerId) {
+      employeeQuery.partnerId = partnerId;
+    }
+    
+    const employee = await Employee.findOne(employeeQuery);
     console.log("employee:", employee);
+    console.log("employeeQuery:", employeeQuery);
     if (employee) {
       let isMatch = false;
       

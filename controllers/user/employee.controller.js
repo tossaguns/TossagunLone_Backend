@@ -1,5 +1,8 @@
 const Employee = require("../../models/user/employee.schema");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const path = require("path");
 
 // อัปเดต password ของ employee ที่เป็น plain text ให้เป็น encrypted
 exports.updatePlainTextPasswords = async (req, res) => {
@@ -38,7 +41,18 @@ exports.updatePlainTextPasswords = async (req, res) => {
 // สร้าง employee ใหม่
 exports.createEmployee = async (req, res) => {
   try {
-    const { username, password, firstname, lastname, nickname, sex, email, phone, employeeCode, positionEmployee, statusByPartner, partnerId } = req.body;
+    console.log('🔄 เริ่มสร้าง employee...');
+    console.log('Request body:', req.body);
+    console.log('Request user:', req.user);
+
+    const { username, password, firstname, lastname, nickname, sex, email, phone, employeeCode, positionEmployee, statusByPartner, partnerId, aboutHotelId } = req.body;
+
+    // ตรวจสอบข้อมูลที่จำเป็น
+    if (!username || !password || !statusByPartner) {
+      return res.status(400).json({ 
+        message: "กรุณากรอกข้อมูลที่จำเป็น: username, password, statusByPartner" 
+      });
+    }
 
     // ตรวจสอบว่า username ซ้ำหรือไม่
     const existingEmployee = await Employee.findOne({ username });
@@ -48,6 +62,9 @@ exports.createEmployee = async (req, res) => {
 
     // เข้ารหัส password
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // ใช้ partnerId จาก req.user ถ้าไม่ได้ส่งมา
+    const finalPartnerId = partnerId || req.user.id;
 
     const employee = new Employee({
       username,
@@ -61,18 +78,42 @@ exports.createEmployee = async (req, res) => {
       employeeCode,
       positionEmployee,
       statusByPartner,
-      partnerId
+      partnerId: finalPartnerId,
+      aboutHotelId: aboutHotelId || null
     });
 
+    console.log('Employee object to save:', employee);
+
     const savedEmployee = await employee.save();
+
+    console.log('✅ สร้าง employee สำเร็จ:', savedEmployee);
 
     res.status(201).json({
       message: "สร้าง employee สำเร็จ",
       employee: savedEmployee
     });
   } catch (error) {
-    console.error("Error creating employee:", error);
-    res.status(500).json({ message: "เกิดข้อผิดพลาดจากเซิร์ฟเวอร์" });
+    console.error("❌ Error creating employee:", error);
+    
+    // จัดการ error ตามประเภท
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ 
+        message: "ข้อมูลไม่ถูกต้อง", 
+        errors: validationErrors 
+      });
+    }
+    
+    if (error.code === 11000) {
+      return res.status(400).json({ 
+        message: "Username นี้มีอยู่ในระบบแล้ว" 
+      });
+    }
+
+    res.status(500).json({ 
+      message: "เกิดข้อผิดพลาดจากเซิร์ฟเวอร์",
+      error: error.message 
+    });
   }
 };
 
@@ -98,7 +139,18 @@ exports.loginEmployee = async (req, res) => {
     res.status(200).json({
       message: "เข้าสู่ระบบสำเร็จ",
       token,
-      employee,
+      user: {
+        _id: employee._id,
+        username: employee.username,
+        role: employee.statusByPartner,
+        employeeCode: employee.employeeCode,
+        firstname: employee.firstname,
+        lastname: employee.lastname,
+        nickname: employee.nickname,
+        positionEmployee: employee.positionEmployee,
+        partnerId: employee.partnerId,
+        aboutHotelId: employee.aboutHotelId || null,
+      },
     });
   } catch (err) {
     res.status(500).json({ message: err.message });

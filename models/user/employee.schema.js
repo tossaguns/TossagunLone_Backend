@@ -26,6 +26,7 @@ const employeeSchema = new Schema(
 
     statusByPartner: { type: String, required: true }, // มี adminPartner, employee
     partnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner', required: true },
+    aboutHotelId: { type: mongoose.Schema.Types.ObjectId, ref: 'aboutHotel' },
   },
   {
     timestamps: true,

@@ -22,7 +22,6 @@ const memberSchema = new Schema(
     birthDate: { type: Date, },
     age: { type: Number, },
 
-
     nationality: { type: String, },
     religion: { type: String, },
 

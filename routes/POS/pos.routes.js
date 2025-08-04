@@ -97,6 +97,12 @@ router.get("/rooms/:id", verifyPartnerAuth, posController.getRoomById);
 // ค้นหาห้องว่างตามช่วงวันที่
 router.post("/rooms/search-by-date", verifyPartnerAuth, posController.searchAvailableRoomsByDateRange);
 
+// ค้นหาห้องที่ check-out (ห้องไม่ว่าง)
+router.post("/rooms/search-checked-out", verifyPartnerAuth, posController.searchCheckedOutRooms);
+
+// ค้นหาห้องกำลังทำความสะอาด
+router.post("/rooms/search-cleaning", verifyPartnerAuth, posController.searchCleaningRooms);
+
 // ล้างการค้นหาห้องว่าง
 router.delete("/rooms/search", verifyPartnerAuth, posController.clearRoomSearch);
 

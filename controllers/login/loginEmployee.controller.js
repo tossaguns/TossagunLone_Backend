@@ -42,9 +42,16 @@ const loginEmployee = async (req, res) => {
       message: "เข้าสู่ระบบสำเร็จ",
       token,
       user: {
+        _id: employee._id,
         username: employee.username,
         role: "employee",
         employeeCode: employee.employeeCode,
+        firstname: employee.firstname,
+        lastname: employee.lastname,
+        nickname: employee.nickname,
+        positionEmployee: employee.positionEmployee,
+        partnerId: employee.partnerId,
+        aboutHotelId: employee.aboutHotelId || null,
       },
     });
   } catch (error) {

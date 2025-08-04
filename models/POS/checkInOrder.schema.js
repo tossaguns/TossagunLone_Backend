@@ -26,11 +26,19 @@ const checkInOrderSchema = new Schema(
       type: Date,
       default: 0,
     },
+    // เก็บข้อมูลมาจาก login ของพนักงาน
     orderBy: {
       type: String,
       default: 0,
-    }, 
-
+    },
+    employeeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "employee",
+    },
+    aboutHotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "aboutHotel",
+    },
 
     // การเชื่อมโยงกับไฟล์ลูก
     roomID: [{

@@ -2198,6 +2198,228 @@ const clearRoomSearch = async (req, res) => {
   }
 };
 
+// ฟังก์ชันค้นหาห้องที่ check-out (ห้องไม่ว่าง)
+const searchCheckedOutRooms = async (req, res) => {
+  try {
+    const partnerId = req.partner.id;
+    const { startDate, endDate } = req.body;
+
+    console.log('🔍 Searching checked out rooms:', { partnerId, startDate, endDate });
+
+    // ตรวจสอบข้อมูลที่ส่งมา
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        message: "กรุณาระบุวันที่เริ่มต้นและวันที่สิ้นสุด",
+      });
+    }
+
+    // แปลงวันที่เป็น Date object
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    // ตรวจสอบความถูกต้องของวันที่
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "รูปแบบวันที่ไม่ถูกต้อง",
+      });
+    }
+
+    if (start >= end) {
+      return res.status(400).json({
+        success: false,
+        message: "วันที่เริ่มต้นต้องน้อยกว่าวันที่สิ้นสุด",
+      });
+    }
+
+    // คำนวณจำนวนวัน
+    const duration = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+
+    // ดึงข้อมูลห้องที่ check-out (ห้องไม่ว่าง) ของ partner
+    const checkedOutRooms = await room.find({ 
+      partnerId,
+      statusRoom: 'ไม่ว่าง'
+    }).populate([
+      { path: 'buildingId', select: 'nameBuilding' },
+      { path: 'typeRoom', select: 'name mainName' },
+      { path: 'tag', select: 'name color' },
+      { path: 'typeRoomHotel', select: 'name' }
+    ]);
+
+    // จัดกลุ่มห้องตามตึกและชั้น
+    const roomsByBuilding = {};
+    checkedOutRooms.forEach(room => {
+      const buildingId = room.buildingId._id.toString();
+      const buildingName = room.buildingId.nameBuilding;
+      const floor = room.floor;
+
+      if (!roomsByBuilding[buildingId]) {
+        roomsByBuilding[buildingId] = {
+          buildingId: buildingId,
+          buildingName: buildingName,
+          floors: {}
+        };
+      }
+
+      if (!roomsByBuilding[buildingId].floors[floor]) {
+        roomsByBuilding[buildingId].floors[floor] = [];
+      }
+
+      roomsByBuilding[buildingId].floors[floor].push(room);
+    });
+
+    // แปลงเป็น array
+    const result = Object.values(roomsByBuilding).map(building => ({
+      ...building,
+      floors: Object.entries(building.floors).map(([floorName, rooms]) => ({
+        floorName,
+        rooms
+      }))
+    }));
+
+    console.log('✅ Found checked out rooms:', {
+      checkedOutRooms: checkedOutRooms.length,
+      dateRange: { start: start.toISOString(), end: end.toISOString(), duration }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "ค้นหาห้องที่ check-out สำเร็จ",
+      data: {
+        searchCriteria: {
+          startDate: start,
+          endDate: end,
+          duration: duration
+        },
+        summary: {
+          checkedOutRooms: checkedOutRooms.length
+        },
+        rooms: result
+      }
+    });
+
+  } catch (error) {
+    console.error("❌ Error searching checked out rooms:", error);
+    res.status(500).json({
+      success: false,
+      message: "เกิดข้อผิดพลาดในการค้นหาห้องที่ check-out",
+      error: error.message,
+    });
+  }
+};
+
+// ฟังก์ชันค้นหาห้องกำลังทำความสะอาด
+const searchCleaningRooms = async (req, res) => {
+  try {
+    const partnerId = req.partner.id;
+    const { startDate, endDate } = req.body;
+
+    console.log('🔍 Searching cleaning rooms:', { partnerId, startDate, endDate });
+
+    // ตรวจสอบข้อมูลที่ส่งมา
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        message: "กรุณาระบุวันที่เริ่มต้นและวันที่สิ้นสุด",
+      });
+    }
+
+    // แปลงวันที่เป็น Date object
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    // ตรวจสอบความถูกต้องของวันที่
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "รูปแบบวันที่ไม่ถูกต้อง",
+      });
+    }
+
+    if (start >= end) {
+      return res.status(400).json({
+        success: false,
+        message: "วันที่เริ่มต้นต้องน้อยกว่าวันที่สิ้นสุด",
+      });
+    }
+
+    // คำนวณจำนวนวัน
+    const duration = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+
+    // ดึงข้อมูลห้องกำลังทำความสะอาดของ partner
+    const cleaningRooms = await room.find({ 
+      partnerId,
+      statusRoom: 'กำลังทำความสะอาด'
+    }).populate([
+      { path: 'buildingId', select: 'nameBuilding' },
+      { path: 'typeRoom', select: 'name mainName' },
+      { path: 'tag', select: 'name color' },
+      { path: 'typeRoomHotel', select: 'name' }
+    ]);
+
+    // จัดกลุ่มห้องตามตึกและชั้น
+    const roomsByBuilding = {};
+    cleaningRooms.forEach(room => {
+      const buildingId = room.buildingId._id.toString();
+      const buildingName = room.buildingId.nameBuilding;
+      const floor = room.floor;
+
+      if (!roomsByBuilding[buildingId]) {
+        roomsByBuilding[buildingId] = {
+          buildingId: buildingId,
+          buildingName: buildingName,
+          floors: {}
+        };
+      }
+
+      if (!roomsByBuilding[buildingId].floors[floor]) {
+        roomsByBuilding[buildingId].floors[floor] = [];
+      }
+
+      roomsByBuilding[buildingId].floors[floor].push(room);
+    });
+
+    // แปลงเป็น array
+    const result = Object.values(roomsByBuilding).map(building => ({
+      ...building,
+      floors: Object.entries(building.floors).map(([floorName, rooms]) => ({
+        floorName,
+        rooms
+      }))
+    }));
+
+    console.log('✅ Found cleaning rooms:', {
+      cleaningRooms: cleaningRooms.length,
+      dateRange: { start: start.toISOString(), end: end.toISOString(), duration }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "ค้นหาห้องกำลังทำความสะอาดสำเร็จ",
+      data: {
+        searchCriteria: {
+          startDate: start,
+          endDate: end,
+          duration: duration
+        },
+        summary: {
+          cleaningRooms: cleaningRooms.length
+        },
+        rooms: result
+      }
+    });
+
+  } catch (error) {
+    console.error("❌ Error searching cleaning rooms:", error);
+    res.status(500).json({
+      success: false,
+      message: "เกิดข้อผิดพลาดในการค้นหาห้องกำลังทำความสะอาด",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   // POS Controllers
   createPos,
@@ -2250,6 +2472,8 @@ module.exports = {
   
   // Room Search Controllers
   searchAvailableRoomsByDateRange,
+  searchCheckedOutRooms,
+  searchCleaningRooms,
   clearRoomSearch,
   
   // Comprehensive Data
